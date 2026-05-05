@@ -35,9 +35,9 @@ public class AuthService {
         String username = req.getUsername().toLowerCase().trim();
 
         if (userRepository.existsByEmail(email))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         if (userRepository.existsByUsername(username))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
 
         User user = userRepository.save(User.builder()
                 .email(email).username(username)

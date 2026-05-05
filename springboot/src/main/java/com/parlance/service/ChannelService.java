@@ -37,7 +37,7 @@ public class ChannelService {
     public Channel createChannel(ChannelDto.CreateRequest req, String userId) {
         String name = req.getName().toLowerCase().trim().replaceAll("\\s+", "-");
         if (channelRepository.existsByName(name))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Channel name already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Channel name already exists");
         Channel ch = channelRepository.save(Channel.builder()
                 .name(name).description(req.getDescription()).channelType(req.getChannelType())
                 .createdBy(userId).build());

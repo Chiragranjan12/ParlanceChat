@@ -11,6 +11,7 @@
 /app/springboot/src/main/java/com/parlance/controller/ChannelController.java
 /app/springboot/src/main/java/com/parlance/config/WebSocketConfig.java
 /app/springboot/src/main/java/com/parlance/model/LoginAttempt.java
+/app/springboot/src/main/java/com/parlance/config/GlobalExceptionHandler.java
 /app/springboot/src/main/java/com/parlance/service/AuthService.java
 /app/springboot/src/main/java/com/parlance/ParlanceApplication.java
 /app/springboot/src/main/java/com/parlance/security/JwtAuthenticationEntryPoint.java

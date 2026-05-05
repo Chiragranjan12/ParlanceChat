@@ -29,6 +29,7 @@ com/parlance/security/JwtAuthenticationEntryPoint.class
 com/parlance/service/MessageService.class
 com/parlance/security/JwtAuthFilter.class
 com/parlance/dto/ChannelDto$CreateRequest.class
+com/parlance/config/GlobalExceptionHandler.class
 com/parlance/dto/AuthDto$AuthResponse.class
 com/parlance/dto/MessageRequestDto$EditMessage.class
 com/parlance/dto/AuthDto$RegisterRequest.class

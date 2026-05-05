@@ -1,0 +1,93 @@
+{
+  "theme": "dark",
+  "archetype": "Swiss & High-Contrast mixed with Jewel & Luxury (Premium Dark Mode SaaS)",
+  "domain": "Productivity & Team Communication",
+  "colors": {
+    "background_base": "#09090b",
+    "background_sidebar": "#18181b",
+    "background_panel": "rgba(24, 24, 27, 0.5)",
+    "background_message_hover": "#27272a",
+    "primary_accent": "#6366f1",
+    "primary_accent_hover": "#4f46e5",
+    "status_online": "#10b981",
+    "status_offline": "#71717a",
+    "status_idle": "#f59e0b",
+    "status_dnd": "#ef4444",
+    "text_primary": "#fafafa",
+    "text_secondary": "#a1a1aa",
+    "text_accent": "#818cf8",
+    "border_subtle": "#27272a"
+  },
+  "typography": {
+    "heading_font": "Outfit, sans-serif",
+    "body_font": "Inter, sans-serif",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-bold",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "body": "text-base leading-relaxed",
+      "message": "text-[15px] leading-relaxed",
+      "small": "text-sm text-secondary",
+      "tiny_label": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "layout": {
+    "spacing_scale": "generous",
+    "grid_strategy": "Control Room Grid (Dense & Structured)",
+    "structure": {
+      "app_container": "h-screen w-full flex overflow-hidden bg-[#09090b] text-[#fafafa]",
+      "sidebar": "w-64 flex-shrink-0 border-r border-[#27272a] bg-[#18181b] flex flex-col",
+      "main_chat": "flex-1 flex flex-col min-w-0 bg-[#09090b]",
+      "right_panel": "w-72 flex-shrink-0 border-l border-[#27272a] bg-[#18181b]/50 hidden lg:flex flex-col"
+    }
+  },
+  "components": {
+    "buttons": "Shadcn UI Buttons, customized with primary accent color and crisp edges (rounded-md). Include hover states (lighter hue) and focus rings (ring-2 ring-primary/50).",
+    "inputs": "Shadcn UI Inputs, bg-zinc-900 border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-md.",
+    "chat_message": "Optical alignment with avatar on left. Generous line height. Hover state slightly highlights the message row (bg-zinc-800/30). Group consecutive messages from the same user (hide avatar/name on subsequent messages within 5 mins).",
+    "presence_indicator": "Absolute positioned bottom-right of avatar, circular, 3px border matching parent background to cut out the avatar.",
+    "scrollbars": "Custom thin scrollbars, dark thumb, no gutter.",
+    "modals_dialogs": "Shadcn Dialog with Glassmorphism overlay (backdrop-blur-sm bg-black/60). Dialog body solid bg-zinc-950 border border-zinc-800."
+  },
+  "motion": {
+    "hover_states": "transition-colors duration-200 ease-in-out",
+    "message_entrance": "Framer motion staggered fade-up for new messages (y: 10, opacity: 0 -> y: 0, opacity: 1, duration: 0.2s)",
+    "typing_indicator": "3-dot bouncing animation using framer-motion (staggerChildren, repeat: Infinity)"
+  },
+  "media": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1760992795200-52321e30d64c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBnZW9tZXRyeXxlbnwwfHx8fDE3NzgwMDk0NDl8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract glowing crosses against dark background"
+    },
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1601944294379-2947903604da?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwzfHxwb3J0cmFpdCUyMG1vZGVybnxlbnwwfHx8fDE3NzgwMDk0NDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Woman in black crew neck"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1757773871358-2ee450d2d9e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMG1vZGVybnxlbnwwfHx8fDE3NzgwMDk0NDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Man with braided hair"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1519744434498-a0de604df9db?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMG1vZGVybnxlbnwwfHx8fDE3NzgwMDk0NDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Woman in white shirt"
+      }
+    ]
+  },
+  "accessibility_and_testing": {
+    "data_testid_rule": "ALL interactive elements MUST include a data-testid attribute (e.g., data-testid='login-submit-button', data-testid='message-input')",
+    "contrast": "Ensure minimum 4.5:1 ratio for text. Use APCA guidelines.",
+    "focus": "Clear focus rings on keyboard navigation."
+  },
+  "instructions_to_main_agent": [
+    "Install and use `lucide-react` for icons.",
+    "Use Framer Motion for message appearances and typing indicators.",
+    "Build Shadcn components using Javascript (no Typescript).",
+    "Ensure dark mode is default by applying `dark` class to HTML or root element.",
+    "Implement the 3-column layout strictly: Sidebar (Channels/DMs), Main View (Chat), Right Sidebar (Thread/Profile details).",
+    "Don't use raw generic placeholder images, ONLY use the URLs provided in this JSON.",
+    "Apply `Outfit` font for brand and headers, `Inter` for regular text. Add to Tailwind config and import from Google Fonts.",
+    "Use React Hot Toast for all app notifications.",
+    "Include empty states for unselected chats and search results using minimalist layouts, potentially with the abstract background image lightly overlaid."
+  ]
+}

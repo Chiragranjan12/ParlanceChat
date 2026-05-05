@@ -25,6 +25,7 @@ com/parlance/service/AuthService.class
 com/parlance/config/WebSocketConfig.class
 com/parlance/model/Message.class
 com/parlance/dto/MessageRequestDto$AddReaction.class
+com/parlance/security/JwtAuthenticationEntryPoint.class
 com/parlance/service/MessageService.class
 com/parlance/security/JwtAuthFilter.class
 com/parlance/dto/ChannelDto$CreateRequest.class

@@ -13,6 +13,7 @@
 /app/springboot/src/main/java/com/parlance/model/LoginAttempt.java
 /app/springboot/src/main/java/com/parlance/service/AuthService.java
 /app/springboot/src/main/java/com/parlance/ParlanceApplication.java
+/app/springboot/src/main/java/com/parlance/security/JwtAuthenticationEntryPoint.java
 /app/springboot/src/main/java/com/parlance/dto/GroupDto.java
 /app/springboot/src/main/java/com/parlance/model/ChannelMember.java
 /app/springboot/src/main/java/com/parlance/repository/ChannelRepository.java

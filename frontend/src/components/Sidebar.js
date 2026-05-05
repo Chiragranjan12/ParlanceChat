@@ -69,9 +69,9 @@ export default function Sidebar({ onClose }) {
 
         {/* Channels */}
         <div>
-          <button
+        <div
             onClick={() => setExpandChannels(p => !p)}
-            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group"
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group cursor-pointer"
             data-testid="channels-section-toggle"
           >
             <div className="flex items-center gap-1">
@@ -85,7 +85,7 @@ export default function Sidebar({ onClose }) {
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
-          </button>
+          </div>
 
           <AnimatePresence>
             {expandChannels && (
@@ -111,9 +111,9 @@ export default function Sidebar({ onClose }) {
 
         {/* Groups */}
         <div>
-          <button
+          <div
             onClick={() => setExpandGroups(p => !p)}
-            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group mt-2"
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group mt-2 cursor-pointer"
             data-testid="groups-section-toggle"
           >
             <div className="flex items-center gap-1">
@@ -127,7 +127,7 @@ export default function Sidebar({ onClose }) {
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
-          </button>
+          </div>
 
           <AnimatePresence>
             {expandGroups && (
@@ -153,9 +153,9 @@ export default function Sidebar({ onClose }) {
 
         {/* Direct Messages */}
         <div>
-          <button
+          <div
             onClick={() => setExpandDMs(p => !p)}
-            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group mt-2"
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#71717a] hover:text-[#a1a1aa] transition-colors group mt-2 cursor-pointer"
             data-testid="dms-section-toggle"
           >
             <div className="flex items-center gap-1">
@@ -169,7 +169,7 @@ export default function Sidebar({ onClose }) {
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
-          </button>
+          </div>
 
           <AnimatePresence>
             {expandDMs && (

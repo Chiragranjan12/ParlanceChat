@@ -39,10 +39,12 @@ export function ChatProvider({ children }) {
         break;
       case "message":
         const newMsg = msg.data;
-        setMessages(prev => ({
-          ...prev,
-          [newMsg.room_id]: [...(prev[newMsg.room_id] || []), newMsg]
-        }));
+        setMessages(prev => {
+          const existing = prev[newMsg.room_id] || [];
+          // Dedup: skip if message ID already exists
+          if (existing.some(m => m.id === newMsg.id)) return prev;
+          return { ...prev, [newMsg.room_id]: [...existing, newMsg] };
+        });
         // Update DM list if DM message
         if (newMsg.room_type === "dm") {
           setDmList(prev => {

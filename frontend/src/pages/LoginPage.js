@@ -1,0 +1,147 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Eye, EyeOff, MessageSquare } from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
+
+export default function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      navigate("/");
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      setError(typeof detail === "string" ? detail : "Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-screen w-full flex overflow-hidden bg-[#09090b]">
+      {/* Left: Decorative panel */}
+      <div
+        className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12"
+        style={{
+          backgroundImage: `linear-gradient(to bottom right, rgba(99,102,241,0.15), rgba(9,9,11,0.9)), url(https://images.unsplash.com/photo-1760992795200-52321e30d64c?crop=entropy&cs=srgb&fm=jpg&q=85)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center z-10"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-[#6366f1] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/30">
+            <MessageSquare className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-outfit text-5xl font-bold text-white mb-4 tracking-tight">Parlance</h1>
+          <p className="text-[#a1a1aa] text-lg max-w-sm mx-auto leading-relaxed">
+            The modern real-time communication platform for teams and communities.
+          </p>
+          <div className="mt-8 flex gap-6 justify-center">
+            {["Real-time messaging", "Channels & Groups", "File sharing"].map((f) => (
+              <div key={f} className="flex items-center gap-2 text-sm text-[#a1a1aa]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#6366f1]" />
+                {f}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Right: Login form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
+        >
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <div className="w-10 h-10 rounded-xl bg-[#6366f1] flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-outfit text-2xl font-bold text-white">Parlance</span>
+          </div>
+
+          <h2 className="font-outfit text-3xl font-bold text-white mb-2">Welcome back</h2>
+          <p className="text-[#a1a1aa] mb-8">Sign in to continue to Parlance</p>
+
+          {error && (
+            <div data-testid="login-error" className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#a1a1aa] mb-1.5">Email</label>
+              <input
+                data-testid="login-email-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full px-4 py-3 rounded-lg bg-[#18181b] border border-[#27272a] text-white placeholder-[#52525b] focus:outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#a1a1aa] mb-1.5">Password</label>
+              <div className="relative">
+                <input
+                  data-testid="login-password-input"
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="w-full px-4 py-3 pr-12 rounded-lg bg-[#18181b] border border-[#27272a] text-white placeholder-[#52525b] focus:outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#52525b] hover:text-[#a1a1aa] transition-colors"
+                >
+                  {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              data-testid="login-submit-button"
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 rounded-lg bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition-colors duration-200 mt-2"
+            >
+              {isLoading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          <p className="text-center text-[#a1a1aa] text-sm mt-6">
+            Don't have an account?{" "}
+            <Link data-testid="signup-link" to="/signup" className="text-[#818cf8] hover:text-[#6366f1] font-medium transition-colors">
+              Create account
+            </Link>
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

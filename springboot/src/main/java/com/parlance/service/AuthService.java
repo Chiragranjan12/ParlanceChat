@@ -45,15 +45,8 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
                 .status("online").role("user").build());
 
-        // Auto-join general + random
-        for (String chName : new String[]{"general", "random"}) {
-            channelRepository.findByName(chName).ifPresent(ch -> {
-                if (!channelMemberRepository.existsByChannelIdAndUserId(ch.getId(), user.getId())) {
-                    channelMemberRepository.save(ChannelMember.builder()
-                            .channelId(ch.getId()).userId(user.getId()).role("member").build());
-                }
-            });
-        }
+        // Note: users are no longer auto-joined to channels.
+        // They discover and join channels themselves via /api/channels and /api/channels/{id}/join.
 
         String accessToken = jwtUtil.generateAccessToken(user.getId(), email);
         String refreshToken = jwtUtil.generateRefreshToken(user.getId());

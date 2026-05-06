@@ -24,8 +24,21 @@ public class SeedService {
 
     public void seed() {
         String adminId = seedAdmin();
+        renameLegacyChannels();
         seedChannels(adminId);
         log.info("Seeding complete. Admin: {}", adminEmail);
+    }
+
+    private void renameLegacyChannels() {
+        // Rename legacy "random" channel to "off-topic" so existing DBs migrate cleanly
+        channelRepository.findByName("random").ifPresent(ch -> {
+            if (!channelRepository.existsByName("off-topic")) {
+                ch.setName("off-topic");
+                ch.setDescription("Casual, off-topic conversations");
+                channelRepository.save(ch);
+                log.info("Migrated legacy channel 'random' -> 'off-topic'");
+            }
+        });
     }
 
     private String seedAdmin() {
@@ -50,8 +63,8 @@ public class SeedService {
     private void seedChannels(String adminId) {
         String[][] channels = {
             {"general", "General discussion for everyone", "public"},
-            {"random", "Off-topic conversations", "public"},
-            {"announcements", "Important announcements", "broadcast"}
+            {"off-topic", "Casual, off-topic conversations", "public"},
+            {"announcements", "Important announcements (admins only)", "broadcast"}
         };
         for (String[] ch : channels) {
             if (!channelRepository.existsByName(ch[0])) {

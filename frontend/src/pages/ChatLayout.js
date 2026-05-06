@@ -15,7 +15,7 @@ function getDmRoomId(userId1, userId2) {
 export default function ChatLayout() {
   const { activeRoom, setActiveRoom, channels, groups, dmList } = useChat();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const navigate = useNavigate();
 
   // Auto-select first channel on mount
@@ -78,7 +78,7 @@ export default function ChatLayout() {
 
           {/* Right panel */}
           <AnimatePresence>
-            {(rightPanelOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && activeRoom && (
+            {rightPanelOpen && activeRoom && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 272, opacity: 1 }}

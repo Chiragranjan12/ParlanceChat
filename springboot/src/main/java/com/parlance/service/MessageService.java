@@ -22,6 +22,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ReactionRepository reactionRepository;
     private final UserRepository userRepository;
+    private final ChannelRepository channelRepository;
     private final ChannelMemberRepository channelMemberRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final ChatWebSocketHandler wsHandler;
@@ -82,6 +83,19 @@ public class MessageService {
         if ("channel".equals(req.getRoomType())) {
             if (!channelMemberRepository.existsByChannelIdAndUserId(req.getRoomId(), senderId))
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+            // Broadcast channels: admins-only post
+            channelRepository.findById(req.getRoomId()).ifPresent(ch -> {
+                if ("broadcast".equalsIgnoreCase(ch.getChannelType())) {
+                    User sender = userRepository.findById(senderId).orElse(null);
+                    var cm = channelMemberRepository.findByChannelIdAndUserId(req.getRoomId(), senderId).orElse(null);
+                    boolean isAdmin = (sender != null && "admin".equalsIgnoreCase(sender.getRole()))
+                            || (cm != null && "admin".equalsIgnoreCase(cm.getRole()));
+                    if (!isAdmin) {
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                            "Only admins can post in announcement channels");
+                    }
+                }
+            });
         } else if ("group".equals(req.getRoomType())) {
             if (!groupMemberRepository.existsByGroupIdAndUserId(req.getRoomId(), senderId))
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");

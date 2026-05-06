@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Git config
+.gitconfig
+
 # IDE and editors
 .idea/
 .vscode/
@@ -84,6 +87,7 @@ android-sdk/frontend/node_modules/.cache/default-development/0.pack
 # Environment and credential files
 .env
 .env.*
+!.env.example
 *.env
 credentials.json
 *.pem

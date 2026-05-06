@@ -28,7 +28,18 @@ function ProtectedRoute({ children }) {
 
 function GuestRoute({ children }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[#09090b]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#6366f1] flex items-center justify-center animate-pulse">
+            <span className="font-outfit font-bold text-white text-lg">P</span>
+          </div>
+          <p className="text-[#a1a1aa] text-sm">Loading Parlance...</p>
+        </div>
+      </div>
+    );
+  }
   return !user ? children : <Navigate to="/" replace />;
 }
 

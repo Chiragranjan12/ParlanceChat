@@ -13,6 +13,20 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			'background-base': '#09090b',
+  			'background-sidebar': '#18181b',
+  			'background-panel': 'rgba(24, 24, 27, 0.5)',
+  			'background-message-hover': '#27272a',
+  			'primary-accent': '#6366f1',
+  			'primary-accent-hover': '#4f46e5',
+  			'status-online': '#10b981',
+  			'status-offline': '#71717a',
+  			'status-idle': '#f59e0b',
+  			'status-dnd': '#ef4444',
+  			'text-primary': '#fafafa',
+  			'text-secondary': '#a1a1aa',
+  			'text-accent': '#818cf8',
+  			'border-subtle': '#27272a',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -53,6 +67,10 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
+  		},
+  		fontFamily: {
+  			heading: ['Outfit', 'sans-serif'],
+  			body: ['Inter', 'sans-serif']
   		},
   		keyframes: {
   			'accordion-down': {

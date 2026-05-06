@@ -34,7 +34,7 @@ export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
 
   const getRoomIcon = () => {
     if (!activeRoom) return null;
-    if (activeRoom.type === "channel") return <Hash className="w-4 h-4" />;
+    if (activeRoom.type === "channel") return null;
     if (activeRoom.type === "group") return <Users className="w-4 h-4" />;
     return <MessageSquare className="w-4 h-4" />;
   };
@@ -178,9 +178,9 @@ function EmptyMessages({ room }) {
   return (
     <div className="flex flex-col items-center justify-center h-full py-16 text-center">
       <div className="w-14 h-14 rounded-2xl bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-4">
-        {room?.type === "channel" ? <Hash className="w-7 h-7 text-[#6366f1]" /> : room?.type === "group" ? <Users className="w-7 h-7 text-[#6366f1]" /> : <MessageSquare className="w-7 h-7 text-[#6366f1]" />}
+        {room?.type === "group" ? <Users className="w-7 h-7 text-[#6366f1]" /> : <MessageSquare className="w-7 h-7 text-[#6366f1]" />}
       </div>
-      <h3 className="font-semibold text-white mb-1">Beginning of {room?.type === "channel" ? "#" : ""}{room?.name}</h3>
+      <h3 className="font-semibold text-white mb-1">Beginning of {room?.name}</h3>
       <p className="text-[#a1a1aa] text-sm max-w-xs">{room?.description || "Send a message to get the conversation started!"}</p>
     </div>
   );

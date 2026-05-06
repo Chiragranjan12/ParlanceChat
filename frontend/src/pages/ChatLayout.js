@@ -59,7 +59,9 @@ export default function ChatLayout() {
           </button>
           {activeRoom && (
             <div className="flex items-center gap-2">
-              <span className="text-[#a1a1aa]">{activeRoom.type === "channel" ? "#" : activeRoom.type === "group" ? "G" : "@"}</span>
+              {activeRoom.type !== "channel" && (
+                <span className="text-[#a1a1aa]">{activeRoom.type === "group" ? "G" : "@"}</span>
+              )}
               <span className="font-medium text-white text-sm">{activeRoom.name}</span>
             </div>
           )}

@@ -96,7 +96,6 @@ export default function Sidebar({ onClose }) {
                   channels.map(ch => (
                     <SidebarItem
                       key={ch.id}
-                      icon={<Hash className="w-4 h-4" />}
                       label={ch.name}
                       isActive={activeRoom?.id === ch.id}
                       onClick={() => selectChannel(ch)}

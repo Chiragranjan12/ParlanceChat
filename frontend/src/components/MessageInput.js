@@ -75,7 +75,7 @@ export default function MessageInput({ replyTo, onCancelReply, roomName }) {
   };
 
   const placeholder = activeRoom
-    ? `Message ${activeRoom.type === "channel" ? "#" : ""}${roomName || activeRoom.name || "..."}`
+    ? `Message ${roomName || activeRoom.name || "..."}`
     : "Select a channel to start messaging";
 
   return (

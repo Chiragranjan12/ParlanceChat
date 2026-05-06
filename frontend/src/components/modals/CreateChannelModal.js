@@ -17,7 +17,7 @@ export default function CreateChannelModal({ open, onClose, onCreated }) {
     setIsCreating(true);
     try {
       await axios.post(`${API}/channels`, { ...form, name: form.name.trim() }, { withCredentials: true });
-      toast.success(`Channel #${form.name} created!`);
+      toast.success(`Channel ${form.name} created!`);
       setForm({ name: "", description: "", channel_type: "public" });
       onCreated?.();
       onClose();

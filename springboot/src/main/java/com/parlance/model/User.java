@@ -35,6 +35,7 @@ public class User {
     @Column(length = 20) @Builder.Default
     private String status = "offline";
 
+    @JsonIgnore
     @Column(length = 20) @Builder.Default
     private String role = "user";
 

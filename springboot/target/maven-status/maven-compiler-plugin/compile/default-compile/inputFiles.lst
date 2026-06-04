@@ -16,6 +16,7 @@ C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\service\GroupS
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\config\SecurityConfig.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\ChannelController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\service\MessageService.java
+C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\HealthController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\MessageController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\dto\AuthDto.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\config\WebSocketConfig.java

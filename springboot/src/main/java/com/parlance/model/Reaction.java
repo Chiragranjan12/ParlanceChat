@@ -13,15 +13,22 @@ public class Reaction {
     @Id @UuidGenerator @Column(length = 36)
     private String id;
 
-    @Column(name = "message_id", nullable = false)
+    @Column(name = "message_id", nullable = false, length = 36)
     private String messageId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
-    @Column(length = 10)
+    @Column(nullable = false, length = 10)
     private String emoji;
 
     @Column(name = "created_at") @Builder.Default
-    private Instant createdAt = Instant.now();
+    private Instant createdAt = null;
+
+    @PrePersist
+    protected void onCreate() {
+        if(createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

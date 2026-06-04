@@ -15,16 +15,16 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "sender_id", nullable = false)
+    @Column(name = "sender_id", nullable = false, length = 36)
     private String senderId;
 
-    @Column(name = "room_type", length = 20)
+    @Column(name = "room_type", length = 50, nullable = false)
     private String roomType;
 
-    @Column(name = "room_id")
+    @Column(name = "room_id", length = 100, nullable = false)
     private String roomId;
 
-    @Column(name = "reply_to")
+    @Column(name = "reply_to", length = 36)
     private String replyTo;
 
     @Column(name = "is_deleted") @Builder.Default
@@ -34,5 +34,12 @@ public class Message {
     private Instant editedAt;
 
     @Column(name = "created_at") @Builder.Default
-    private Instant createdAt = Instant.now();
+    private Instant createdAt = null;
+
+    @PrePersist
+    protected void onCreate() {
+        if(createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

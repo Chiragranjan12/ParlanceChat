@@ -86,6 +86,8 @@ android-sdk/frontend/node_modules/.cache/default-development/0.pack
 -e 
 # Environment and credential files
 .env
+.env.local
+.env.*.local
 .env.*
 !.env.example
 *.env

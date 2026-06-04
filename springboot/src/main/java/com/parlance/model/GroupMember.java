@@ -3,6 +3,9 @@ package com.parlance.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.Instant;
 
 @Entity
@@ -19,6 +22,7 @@ public class GroupMember {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @JsonIgnore
     @Column(length = 20) @Builder.Default
     private String role = "member";
 

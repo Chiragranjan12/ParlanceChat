@@ -40,7 +40,8 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(eh -> eh.authenticationEntryPoint(jwtAuthEntryPoint))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login",
+                .requestMatchers("/api/health",
+                                 "/api/auth/register", "/api/auth/login",
                                  "/api/auth/refresh", "/api/ws/**").permitAll()
                 .anyRequest().authenticated()
             )

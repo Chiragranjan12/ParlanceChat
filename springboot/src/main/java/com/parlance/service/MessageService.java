@@ -1,15 +1,16 @@
 package com.parlance.service;
 
 import com.parlance.dto.*;
+import com.parlance.exception.MessageNotFoundException;
+import com.parlance.exception.UnauthorizedException;
+import com.parlance.exception.UserNotMemberException;
 import com.parlance.model.*;
 import com.parlance.repository.*;
 import com.parlance.websocket.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.*;
@@ -82,7 +83,7 @@ public class MessageService {
         // Validate membership
         if ("channel".equals(req.getRoomType())) {
             if (!channelMemberRepository.existsByChannelIdAndUserId(req.getRoomId(), senderId))
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+                throw new UserNotMemberException(senderId, req.getRoomId(), "channel");
             // Broadcast channels: admins-only post
             channelRepository.findById(req.getRoomId()).ifPresent(ch -> {
                 if ("broadcast".equalsIgnoreCase(ch.getChannelType())) {
@@ -91,14 +92,13 @@ public class MessageService {
                     boolean isAdmin = (sender != null && "admin".equalsIgnoreCase(sender.getRole()))
                             || (cm != null && "admin".equalsIgnoreCase(cm.getRole()));
                     if (!isAdmin) {
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                            "Only admins can post in announcement channels");
+                        throw new UnauthorizedException("Only admins can post in announcement channels");
                     }
                 }
             });
         } else if ("group".equals(req.getRoomType())) {
             if (!groupMemberRepository.existsByGroupIdAndUserId(req.getRoomId(), senderId))
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+                throw new UserNotMemberException(senderId, req.getRoomId(), "group");
         }
         Message msg = messageRepository.save(Message.builder()
                 .content(req.getContent()).senderId(senderId)
@@ -126,9 +126,9 @@ public class MessageService {
     @Transactional
     public MessageDto editMessage(String messageId, String content, String userId) {
         Message msg = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
         if (!msg.getSenderId().equals(userId))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot edit others' messages");
+            throw new UnauthorizedException("Cannot edit others' messages");
         msg.setContent(content);
         msg.setEditedAt(Instant.now());
         messageRepository.save(msg);
@@ -140,9 +140,9 @@ public class MessageService {
     @Transactional
     public void deleteMessage(String messageId, String userId) {
         Message msg = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
         if (!msg.getSenderId().equals(userId))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete others' messages");
+            throw new UnauthorizedException("Cannot delete others' messages");
         msg.setIsDeleted(true);
         msg.setContent("This message was deleted");
         messageRepository.save(msg);
@@ -153,7 +153,7 @@ public class MessageService {
     @Transactional
     public Map<String, Object> toggleReaction(String messageId, String emoji, String userId) {
         Message msg = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
         Optional<Reaction> existing = reactionRepository.findByMessageIdAndUserIdAndEmoji(messageId, userId, emoji);
         String action;
         if (existing.isPresent()) {

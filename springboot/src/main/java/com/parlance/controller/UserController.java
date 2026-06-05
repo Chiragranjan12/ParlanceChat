@@ -1,6 +1,8 @@
 package com.parlance.controller;
 
 import com.parlance.dto.UserDto;
+import com.parlance.exception.UnauthorizedException;
+import com.parlance.exception.UserNotFoundException;
 import com.parlance.model.User;
 import com.parlance.repository.UserRepository;
 import com.parlance.websocket.ChatWebSocketHandler;
@@ -8,10 +10,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.Data;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -40,13 +40,13 @@ public class UserController {
 
     @GetMapping("/me")
     public User getMe(@AuthenticationPrincipal User user) {
-        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (user == null) throw new UnauthorizedException("Authentication required");
         return user;
     }
 
     @PutMapping("/me")
     public UserDto updateMe(@Valid @RequestBody UpdateProfileRequest req, @AuthenticationPrincipal User user) {
-        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (user == null) throw new UnauthorizedException("Authentication required");
         if (req.getDisplayName() != null) user.setDisplayName(req.getDisplayName());
         if (req.getBio() != null) user.setBio(req.getBio());
         if (req.getAvatarUrl() != null) user.setAvatarUrl(req.getAvatarUrl());
@@ -56,7 +56,7 @@ public class UserController {
     @GetMapping("/{userId}")
     public UserDto getUser(@PathVariable String userId, @AuthenticationPrincipal User user) {
         User target = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         UserDto dto = UserDto.from(target);
         dto.setIsOnline(wsHandler.isOnline(userId));
         return dto;

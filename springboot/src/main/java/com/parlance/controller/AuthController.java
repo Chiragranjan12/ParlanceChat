@@ -1,6 +1,7 @@
 package com.parlance.controller;
 
 import com.parlance.dto.AuthDto;
+import com.parlance.exception.UnauthorizedException;
 import com.parlance.model.User;
 import com.parlance.service.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -40,14 +40,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public Map<String, String> logout(@AuthenticationPrincipal User user, HttpServletResponse response) {
-        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (user == null) throw new UnauthorizedException("Authentication required");
         authService.logout(user, response);
         return Map.of("message", "Logged out");
     }
 
     @GetMapping("/me")
     public User me(@AuthenticationPrincipal User user) {
-        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (user == null) throw new UnauthorizedException("Authentication required");
         return user;
     }
 

@@ -3,6 +3,7 @@ package com.parlance.controller;
 import com.parlance.dto.GroupDto;
 import com.parlance.dto.MessageDto;
 import com.parlance.dto.UserDto;
+import com.parlance.exception.UserNotMemberException;
 import com.parlance.model.Group;
 import com.parlance.model.User;
 import com.parlance.service.GroupService;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class GroupController {
                                      @RequestParam(defaultValue = "50") int limit,
                                      @AuthenticationPrincipal User user) {
         if (!groupService.isMember(groupId, user.getId()))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+            throw new UserNotMemberException(user.getId(), groupId, "group");
         return messageService.getRoomMessages(groupId, limit);
     }
 }

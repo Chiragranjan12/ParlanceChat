@@ -1,14 +1,14 @@
 package com.parlance.service;
 
 import com.parlance.dto.*;
+import com.parlance.exception.ChannelNotFoundException;
+import com.parlance.exception.DuplicateUserException;
 import com.parlance.model.*;
 import com.parlance.repository.*;
 import com.parlance.websocket.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ public class ChannelService {
     public Channel createChannel(ChannelDto.CreateRequest req, String userId) {
         String name = req.getName().toLowerCase().trim().replaceAll("\\s+", "-");
         if (channelRepository.existsByName(name))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Channel name already exists");
+            throw new DuplicateUserException("channel_name", name);
         Channel ch = channelRepository.save(Channel.builder()
                 .name(name).description(req.getDescription()).channelType(req.getChannelType())
                 .createdBy(userId).build());
@@ -51,7 +51,7 @@ public class ChannelService {
     @Transactional
     public void joinChannel(String channelId, String userId) {
         if (!channelRepository.existsById(channelId))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Channel not found");
+            throw new ChannelNotFoundException(channelId);
         if (!channelMemberRepository.existsByChannelIdAndUserId(channelId, userId)) {
             channelMemberRepository.save(ChannelMember.builder()
                     .channelId(channelId).userId(userId).role("member").build());

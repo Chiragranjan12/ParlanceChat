@@ -1,6 +1,11 @@
 package com.parlance.service;
 
 import com.parlance.dto.*;
+import com.parlance.exception.DuplicateUserException;
+import com.parlance.exception.InvalidPasswordException;
+import com.parlance.exception.InvalidTokenException;
+import com.parlance.exception.TooManyRequestsException;
+import com.parlance.exception.UserNotFoundException;
 import com.parlance.model.*;
 import com.parlance.repository.*;
 import com.parlance.security.JwtUtil;
@@ -8,12 +13,9 @@ import com.parlance.websocket.ChatWebSocketHandler;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
@@ -35,9 +37,9 @@ public class AuthService {
         String username = req.getUsername().toLowerCase().trim();
 
         if (userRepository.existsByEmail(email))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
+            throw new DuplicateUserException("email", email);
         if (userRepository.existsByUsername(username))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+            throw new DuplicateUserException("username", username);
 
         User user = userRepository.save(User.builder()
                 .email(email).username(username)
@@ -64,20 +66,19 @@ public class AuthService {
             if (att.getCount() >= 5 && att.getLastAttempt() != null) {
                 long secondsSince = Instant.now().getEpochSecond() - att.getLastAttempt().getEpochSecond();
                 if (secondsSince < 900)
-                    throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                            "Too many failed attempts. Try again in 15 minutes.");
+                    throw new TooManyRequestsException("Too many failed attempts. Try again in 15 minutes.");
             }
         });
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     recordFailedAttempt(identifier);
-                    return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+                    return new UserNotFoundException(email);
                 });
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             recordFailedAttempt(identifier);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new InvalidPasswordException(email);
         }
 
         loginAttemptRepository.findByIdentifier(identifier).ifPresent(loginAttemptRepository::delete);
@@ -103,13 +104,13 @@ public class AuthService {
 
     public String refresh(String refreshToken, HttpServletResponse response) {
         if (refreshToken == null || !jwtUtil.validateToken(refreshToken))
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+            throw new InvalidTokenException("Invalid refresh token");
         if (!"refresh".equals(jwtUtil.getTokenType(refreshToken)))
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token type");
+            throw new InvalidTokenException("Invalid token type");
 
         String userId = jwtUtil.getUserId(refreshToken);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
         Cookie cookie = new Cookie("access_token", newAccessToken);

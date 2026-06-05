@@ -3,6 +3,7 @@ package com.parlance.controller;
 import com.parlance.dto.ChannelDto;
 import com.parlance.dto.MessageDto;
 import com.parlance.dto.UserDto;
+import com.parlance.exception.UserNotMemberException;
 import com.parlance.model.Channel;
 import com.parlance.model.User;
 import com.parlance.repository.ChannelMemberRepository;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -66,7 +66,7 @@ public class ChannelController {
                                      @RequestParam(defaultValue = "50") int limit,
                                      @AuthenticationPrincipal User user) {
         if (!channelMemberRepository.existsByChannelIdAndUserId(channelId, user.getId()))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+            throw new UserNotMemberException(user.getId(), channelId, "channel");
         return messageService.getRoomMessages(channelId, limit);
     }
 }

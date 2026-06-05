@@ -1,14 +1,13 @@
 package com.parlance.service;
 
 import com.parlance.dto.*;
+import com.parlance.exception.UserNotMemberException;
 import com.parlance.model.*;
 import com.parlance.repository.*;
 import com.parlance.websocket.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +47,7 @@ public class GroupService {
 
     public List<UserDto> getMembers(String groupId, String requestingUserId) {
         if (!groupMemberRepository.existsByGroupIdAndUserId(groupId, requestingUserId))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member");
+            throw new UserNotMemberException(requestingUserId, groupId, "group");
         return groupMemberRepository.findByGroupId(groupId).stream()
                 .map(m -> userRepository.findById(m.getUserId()).map(u -> {
                     UserDto dto = UserDto.from(u);

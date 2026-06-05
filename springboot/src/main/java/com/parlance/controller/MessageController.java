@@ -29,7 +29,7 @@ public class MessageController {
 
     @PutMapping("/messages/{messageId}")
     public MessageDto editMessage(@PathVariable String messageId,
-                                  @RequestBody MessageRequestDto.EditMessage req,
+                                  @Valid @RequestBody MessageRequestDto.EditMessage req,
                                   @AuthenticationPrincipal User user) {
         return messageService.editMessage(messageId, req.getContent(), user.getId());
     }
@@ -43,7 +43,7 @@ public class MessageController {
 
     @PostMapping("/messages/{messageId}/reactions")
     public Map<String, Object> toggleReaction(@PathVariable String messageId,
-                                              @RequestBody MessageRequestDto.AddReaction req,
+                                              @Valid @RequestBody MessageRequestDto.AddReaction req,
                                               @AuthenticationPrincipal User user) {
         return messageService.toggleReaction(messageId, req.getEmoji(), user.getId());
     }

@@ -341,6 +341,20 @@ export function ChatProvider({ children }) {
     }
   };
 
+  const searchUsers = async (query) => {
+    try {
+      const { data } = await axios.get(`${API}/users?q=${encodeURIComponent(query)}`, { withCredentials: true });
+      return data.filter(u => u.id !== user?.id);
+    } catch (e) { return []; }
+  };
+
+  const getAllUsers = async () => {
+    try {
+      const { data } = await axios.get(`${API}/users`, { withCredentials: true });
+      return data.filter(u => u.id !== user?.id);
+    } catch (e) { return []; }
+  };
+
   const getGroupMessages = async (groupId, limit = 50) => {
     try {
       const { data } = await axios.get(`${API}/groups/${groupId}/messages?limit=${limit}`, { withCredentials: true });
@@ -360,7 +374,8 @@ export function ChatProvider({ children }) {
       sendMessage, editMessage, deleteMessage, addReaction, sendTyping,
       loadChannels, loadGroups, loadDMs, loadMessages,
       createGroup, getGroupMembers, addMemberToGroup, removeMemberFromGroup,
-      leaveGroup, sendGroupMessage, getGroupMessages
+      leaveGroup, sendGroupMessage, getGroupMessages,
+      searchUsers, getAllUsers
     }}>
       {children}
     </ChatContext.Provider>

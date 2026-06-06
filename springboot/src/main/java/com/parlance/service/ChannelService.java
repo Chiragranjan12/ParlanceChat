@@ -49,6 +49,17 @@ public class ChannelService {
     }
 
     @Transactional
+    public void addMember(String channelId, String targetUserId, String requestingUserId) {
+        if (!channelRepository.existsById(channelId))
+            throw new ChannelNotFoundException(channelId);
+        if (!channelMemberRepository.existsByChannelIdAndUserId(channelId, targetUserId)) {
+            channelMemberRepository.save(ChannelMember.builder()
+                    .channelId(channelId).userId(targetUserId).role("member").build());
+            wsHandler.subscribeUserToRoom(targetUserId, channelId);
+        }
+    }
+
+    @Transactional
     public void joinChannel(String channelId, String userId) {
         if (!channelRepository.existsById(channelId))
             throw new ChannelNotFoundException(channelId);

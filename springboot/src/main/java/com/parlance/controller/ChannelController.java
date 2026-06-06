@@ -50,6 +50,15 @@ public class ChannelController {
         return Map.of("message", "Joined successfully");
     }
 
+    @PostMapping("/{channelId}/members")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, String> addMember(@PathVariable String channelId,
+                                         @RequestBody Map<String, String> body,
+                                         @AuthenticationPrincipal User user) {
+        channelService.addMember(channelId, body.get("user_id"), user.getId());
+        return Map.of("message", "Member added successfully");
+    }
+
     @DeleteMapping("/{channelId}/leave")
     public Map<String, String> leave(@PathVariable String channelId, @AuthenticationPrincipal User user) {
         channelService.leaveChannel(channelId, user.getId());

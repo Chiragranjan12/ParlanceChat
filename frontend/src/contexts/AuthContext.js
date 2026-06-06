@@ -16,18 +16,18 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await axios.get(`${API}/auth/me`, { withCredentials: true });
       setUser(data);
-      // Refresh to get a fresh access_token for WebSocket
       try {
         const { data: refreshData } = await axios.post(`${API}/auth/refresh`, {}, { withCredentials: true });
         if (refreshData.access_token) {
           localStorage.setItem("parlance_token", refreshData.access_token);
         }
-      } catch (e) {
-        // If refresh fails, token from localStorage may still work
-      }
+      } catch (e) {}
     } catch (e) {
       setUser(null);
-      localStorage.removeItem("parlance_token");
+      // Only clear token if it's not a network/CORS error - check status explicitly
+      if (e.response?.status === 401) {
+        localStorage.removeItem("parlance_token");
+      }
     } finally {
       setIsLoading(false);
     }

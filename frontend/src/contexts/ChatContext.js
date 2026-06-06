@@ -276,7 +276,7 @@ export function ChatProvider({ children }) {
   // Group management methods
   const createGroup = async (name, description, memberIds) => {
     try {
-      const { data } = await axios.post(`${API}/groups`, { name, description, memberIds }, { headers: authHeaders() });
+      const { data } = await axios.post(`${API}/groups`, { name, description, member_ids: memberIds }, { headers: authHeaders() });
       setGroups(prev => [...prev, data]);
       return data;
     } catch (e) {

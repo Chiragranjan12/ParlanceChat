@@ -76,9 +76,9 @@ export default function ChatLayout() {
             )}
           </div>
 
-          {/* Right panel */}
+          {/* Right panel — channels and groups only */}
           <AnimatePresence>
-            {rightPanelOpen && activeRoom && (
+            {rightPanelOpen && activeRoom && activeRoom.type !== "dm" && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 272, opacity: 1 }}

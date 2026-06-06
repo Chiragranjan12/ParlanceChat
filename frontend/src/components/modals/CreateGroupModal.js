@@ -18,10 +18,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (open) searchUsers("");
+    if (open) { setUsers([]); setSearchQ(""); }
   }, [open]);
 
   useEffect(() => {
+    if (!searchQ.trim()) { setUsers([]); return; }
     const timer = setTimeout(() => searchUsers(searchQ), 300);
     return () => clearTimeout(timer);
   }, [searchQ]);
@@ -55,7 +56,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
       await axios.post(`${API}/groups`, {
         name: name.trim(),
         description: description.trim(),
-        memberIds: memberIds
+        member_ids: memberIds
       }, { headers: authHeaders() });
       toast.success(`Group "${name}" created!`);
       setName("");
@@ -110,7 +111,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
 
             {/* Users list */}
             <div className="flex-1 overflow-y-auto mt-3 space-y-1 min-h-[100px]">
-              {users.map(u => {
+              {!searchQ.trim() ? (
+                <p className="text-center text-[#52525b] text-sm py-4">Type a name to search</p>
+              ) : users.length === 0 ? (
+                <p className="text-center text-[#52525b] text-sm py-4">No users found</p>
+              ) : users.map(u => {
                 const isSelected = selected.find(s => s.id === u.id);
                 return (
                   <button key={u.id} onClick={() => toggleUser(u)} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors ${isSelected ? "bg-[#6366f1]/15" : "hover:bg-[#27272a]"}`} data-testid={`group-user-${u.username}`}>

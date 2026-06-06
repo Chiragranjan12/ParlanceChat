@@ -10,24 +10,22 @@ export default function DMSearch({ onSelectUser }) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (!query.trim()) {
+      setUsers([]);
+      return;
+    }
     let cancelled = false;
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const results = query.trim()
-          ? await searchUsers(query.trim())
-          : await getAllUsers();
+        const results = await searchUsers(query.trim());
         if (!cancelled) setUsers(results);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     }, 250);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [query, searchUsers, getAllUsers]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [query, searchUsers]);
 
   return (
     <div>
@@ -46,6 +44,8 @@ export default function DMSearch({ onSelectUser }) {
       <div className="space-y-1 max-h-64 overflow-y-auto">
         {isLoading ? (
           <p className="text-center text-[#52525b] text-sm py-4">Searching...</p>
+        ) : !query.trim() ? (
+          <p className="text-center text-[#52525b] text-sm py-4">Type a name to search</p>
         ) : users.length === 0 ? (
           <p className="text-center text-[#52525b] text-sm py-4">No users found</p>
         ) : (

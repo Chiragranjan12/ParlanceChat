@@ -14,10 +14,11 @@ export default function NewDmModal({ open, onClose, onSelect }) {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    if (open) fetchUsers("");
+    if (open) setUsers([]);
   }, [open]);
 
   useEffect(() => {
+    if (!searchQ.trim()) { setUsers([]); return; }
     const timer = setTimeout(() => fetchUsers(searchQ), 300);
     return () => clearTimeout(timer);
   }, [searchQ]);
@@ -60,7 +61,9 @@ export default function NewDmModal({ open, onClose, onSelect }) {
             </div>
 
             <div className="space-y-1 max-h-64 overflow-y-auto">
-              {users.length === 0 ? (
+              {!searchQ.trim() ? (
+                <p className="text-center text-[#52525b] text-sm py-4">Type a name to search</p>
+              ) : users.length === 0 ? (
                 <p className="text-center text-[#52525b] text-sm py-4">No users found</p>
               ) : (
                 users.map(u => (

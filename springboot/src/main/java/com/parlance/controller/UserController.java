@@ -2,9 +2,9 @@ package com.parlance.controller;
 
 import com.parlance.dto.UserDto;
 import com.parlance.exception.UnauthorizedException;
-import com.parlance.exception.UserNotFoundException;
 import com.parlance.model.User;
 import com.parlance.repository.UserRepository;
+import com.parlance.service.UserService;
 import com.parlance.websocket.ChatWebSocketHandler;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -23,19 +23,26 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final ChatWebSocketHandler wsHandler;
 
     @GetMapping
     public List<UserDto> searchUsers(@RequestParam(defaultValue = "") String q,
                                      @AuthenticationPrincipal User user) {
-        List<User> users = q.isEmpty()
-                ? userRepository.findAll()
-                : userRepository.findByDisplayNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(q, q);
-        return users.stream().map(u -> {
-            UserDto dto = UserDto.from(u);
-            dto.setIsOnline(wsHandler.isOnline(u.getId()));
-            return dto;
-        }).limit(50).collect(Collectors.toList());
+        return q.isBlank()
+                ? userService.getAllUsersExcept(user.getId())
+                : userService.searchUsers(q, user.getId());
+    }
+
+    @GetMapping("/search")
+    public List<UserDto> searchUsersByQuery(@RequestParam(name = "query", defaultValue = "") String query,
+                                            @AuthenticationPrincipal User user) {
+        return userService.searchUsers(query, user.getId());
+    }
+
+    @GetMapping("/all")
+    public List<UserDto> allAvailableUsers(@AuthenticationPrincipal User user) {
+        return userService.getAllUsersExcept(user.getId());
     }
 
     @GetMapping("/me")
@@ -55,11 +62,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public UserDto getUser(@PathVariable String userId, @AuthenticationPrincipal User user) {
-        User target = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        UserDto dto = UserDto.from(target);
-        dto.setIsOnline(wsHandler.isOnline(userId));
-        return dto;
+        return userService.getUserById(userId);
     }
 
     @Data

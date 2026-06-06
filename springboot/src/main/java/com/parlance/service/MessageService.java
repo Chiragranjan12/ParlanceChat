@@ -3,6 +3,7 @@ package com.parlance.service;
 import com.parlance.dto.*;
 import com.parlance.exception.MessageNotFoundException;
 import com.parlance.exception.UnauthorizedException;
+import com.parlance.exception.UserNotFoundException;
 import com.parlance.exception.UserNotMemberException;
 import com.parlance.model.*;
 import com.parlance.repository.*;
@@ -73,7 +74,8 @@ public class MessageService {
     }
 
     public List<MessageDto> getRoomMessages(String roomId, int limit) {
-        List<Message> msgs = messageRepository.findByRoomIdDesc(roomId, PageRequest.of(0, limit));
+        int cappedLimit = Math.max(1, Math.min(limit, 100));
+        List<Message> msgs = messageRepository.findByRoomIdDesc(roomId, PageRequest.of(0, cappedLimit));
         Collections.reverse(msgs);
         return msgs.stream().map(this::enrich).collect(Collectors.toList());
     }
@@ -111,7 +113,13 @@ public class MessageService {
 
     @Transactional
     public MessageDto sendDm(MessageRequestDto.SendDm req, String senderId) {
-        String roomId = getDmRoomId(senderId, req.getRecipientId());
+        if (senderId.equals(req.getRecipientId())) {
+            throw new UnauthorizedException("Can't DM yourself");
+        }
+        userRepository.findById(senderId).orElseThrow(() -> new UserNotFoundException(senderId));
+        userRepository.findById(req.getRecipientId()).orElseThrow(() -> new UserNotFoundException(req.getRecipientId()));
+
+        String roomId = generateDMRoomId(senderId, req.getRecipientId());
         Message msg = messageRepository.save(Message.builder()
                 .content(req.getContent()).senderId(senderId)
                 .roomType("dm").roomId(roomId)
@@ -171,12 +179,26 @@ public class MessageService {
     }
 
     public String getDmRoomId(String u1, String u2) {
-        List<String> ids = Arrays.asList(u1, u2);
+        return generateDMRoomId(u1, u2);
+    }
+
+    public String generateDMRoomId(String userId1, String userId2) {
+        if (userId1.equals(userId2)) {
+            throw new UnauthorizedException("Can't DM yourself");
+        }
+        List<String> ids = Arrays.asList(userId1, userId2);
         Collections.sort(ids);
         return "dm_" + ids.get(0) + "_" + ids.get(1);
     }
 
-    public List<Map<String, Object>> getDmList(String userId, ChatWebSocketHandler wsHandler) {
+    public List<MessageDto> getDMMessages(String userId1, String userId2, int limit) {
+        userRepository.findById(userId1).orElseThrow(() -> new UserNotFoundException(userId1));
+        userRepository.findById(userId2).orElseThrow(() -> new UserNotFoundException(userId2));
+        return getRoomMessages(generateDMRoomId(userId1, userId2), limit);
+    }
+
+    public List<Map<String, Object>> getUserDMConversations(String userId) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         List<String> roomIds = messageRepository.findDmRoomIdsByUserId(userId);
         List<Map<String, Object>> result = new ArrayList<>();
         for (String roomId : roomIds) {
@@ -194,11 +216,26 @@ public class MessageService {
                 entry.put("avatarUrl", u.getAvatarUrl());
                 entry.put("isOnline", u.getIsOnline());
                 entry.put("room_id", roomId);
-                if (!lastMsgs.isEmpty())
-                    entry.put("last_message_preview", lastMsgs.get(0).getContent().substring(0, Math.min(80, lastMsgs.get(0).getContent().length())));
+                if (!lastMsgs.isEmpty()) {
+                    Message last = lastMsgs.get(0);
+                    entry.put("last_message_preview", last.getContent().substring(0, Math.min(80, last.getContent().length())));
+                    entry.put("last_message_at", last.getCreatedAt());
+                }
                 result.add(entry);
             });
         }
+        result.sort((a, b) -> {
+            Object at = a.get("last_message_at");
+            Object bt = b.get("last_message_at");
+            if (at == null && bt == null) return 0;
+            if (at == null) return 1;
+            if (bt == null) return -1;
+            return bt.toString().compareTo(at.toString());
+        });
         return result;
+    }
+
+    public List<Map<String, Object>> getDmList(String userId, ChatWebSocketHandler wsHandler) {
+        return getUserDMConversations(userId);
     }
 }

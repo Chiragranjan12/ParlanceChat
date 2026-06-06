@@ -273,6 +273,84 @@ export function ChatProvider({ children }) {
     wsRef.current.send(JSON.stringify({ type: isTyping ? "typing_start" : "typing_stop", room_id: activeRoom.id }));
   }, [activeRoom]);
 
+  // Group management methods
+  const createGroup = async (name, description, memberIds) => {
+    try {
+      const { data } = await axios.post(`${API}/groups`, { name, description, memberIds }, { withCredentials: true });
+      setGroups(prev => [...prev, data]);
+      return data;
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to create group");
+      throw e;
+    }
+  };
+
+  const getGroupMembers = async (groupId) => {
+    try {
+      const { data } = await axios.get(`${API}/groups/${groupId}/members`, { withCredentials: true });
+      return data;
+    } catch (e) {
+      toast.error("Failed to load group members");
+      throw e;
+    }
+  };
+
+  const addMemberToGroup = async (groupId, userId) => {
+    try {
+      await axios.post(`${API}/groups/${groupId}/members`, { userId }, { withCredentials: true });
+      toast.success("Member added successfully");
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to add member");
+      throw e;
+    }
+  };
+
+  const removeMemberFromGroup = async (groupId, memberId) => {
+    try {
+      await axios.delete(`${API}/groups/${groupId}/members/${memberId}`, { withCredentials: true });
+      toast.success("Member removed successfully");
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to remove member");
+      throw e;
+    }
+  };
+
+  const leaveGroup = async (groupId) => {
+    try {
+      await axios.post(`${API}/groups/${groupId}/leave`, {}, { withCredentials: true });
+      setGroups(prev => prev.filter(g => g.id !== groupId));
+      setActiveRoomState(null);
+      toast.success("Left group successfully");
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to leave group");
+      throw e;
+    }
+  };
+
+  const sendGroupMessage = async (groupId, content, replyTo = null) => {
+    try {
+      await axios.post(`${API}/messages`, {
+        content: content.trim(),
+        room_type: "group",
+        room_id: groupId,
+        reply_to: replyTo
+      }, { withCredentials: true });
+    } catch (e) {
+      toast.error("Failed to send message");
+      throw e;
+    }
+  };
+
+  const getGroupMessages = async (groupId, limit = 50) => {
+    try {
+      const { data } = await axios.get(`${API}/groups/${groupId}/messages?limit=${limit}`, { withCredentials: true });
+      return data;
+    } catch (e) {
+      toast.error("Failed to load group messages");
+      throw e;
+    }
+  };
+
   return (
     <ChatContext.Provider value={{
       channels, groups, dmList,
@@ -280,7 +358,9 @@ export function ChatProvider({ children }) {
       messages, typingUsers, onlineUsers,
       wsConnected, wsRef, isLoadingMessages,
       sendMessage, editMessage, deleteMessage, addReaction, sendTyping,
-      loadChannels, loadGroups, loadDMs, loadMessages
+      loadChannels, loadGroups, loadDMs, loadMessages,
+      createGroup, getGroupMembers, addMemberToGroup, removeMemberFromGroup,
+      leaveGroup, sendGroupMessage, getGroupMessages
     }}>
       {children}
     </ChatContext.Provider>

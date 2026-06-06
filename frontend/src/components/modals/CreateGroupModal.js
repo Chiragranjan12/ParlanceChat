@@ -38,16 +38,33 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
   };
 
   const handleCreate = async () => {
-    if (!name.trim()) return;
-    setError(""); setIsCreating(true);
+    if (!name.trim()) {
+      setError("Group name is required");
+      return;
+    }
+    if (selected.length === 0) {
+      setError("Select at least 1 other member");
+      return;
+    }
+    
+    setError("");
+    setIsCreating(true);
     try {
-      await axios.post(`${API}/groups`, { name: name.trim(), description, member_ids: selected.map(u => u.id) }, { withCredentials: true });
+      // Include current user + selected members
+      const memberIds = [user?.id, ...selected.map(u => u.id)];
+      await axios.post(`${API}/groups`, {
+        name: name.trim(),
+        description: description.trim(),
+        memberIds: memberIds
+      }, { withCredentials: true });
       toast.success(`Group "${name}" created!`);
-      setName(""); setDescription(""); setSelected([]);
+      setName("");
+      setDescription("");
+      setSelected([]);
       onCreated?.();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create group");
+      setError(err.response?.data?.message || "Failed to create group");
     } finally {
       setIsCreating(false);
     }

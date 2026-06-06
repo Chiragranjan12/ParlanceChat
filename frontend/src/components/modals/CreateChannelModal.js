@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Hash, Lock } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "@/contexts/AuthContext";
+import { API, authHeaders } from "@/contexts/AuthContext";
 
 export default function CreateChannelModal({ open, onClose, onCreated }) {
   const [form, setForm] = useState({ name: "", description: "", channel_type: "public" });
@@ -16,7 +16,7 @@ export default function CreateChannelModal({ open, onClose, onCreated }) {
     if (!form.name.trim()) return;
     setIsCreating(true);
     try {
-      await axios.post(`${API}/channels`, { ...form, name: form.name.trim() }, { withCredentials: true });
+      await axios.post(`${API}/channels`, { ...form, name: form.name.trim() }, { headers: authHeaders() });
       toast.success(`Channel ${form.name} created!`);
       setForm({ name: "", description: "", channel_type: "public" });
       onCreated?.();

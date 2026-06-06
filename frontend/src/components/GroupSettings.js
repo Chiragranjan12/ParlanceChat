@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useAuth, API } from '@/contexts/AuthContext';
+import { useAuth, API, authHeaders } from '@/contexts/AuthContext';
 import { Settings, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,7 @@ export default function GroupSettings({ groupId, groupName = '', groupDescriptio
           name: formData.name.trim(),
           description: formData.description.trim(),
         },
-        { withCredentials: true }
+        { headers: authHeaders() }
       );
       toast.success('Group updated successfully');
       onGroupUpdated?.(formData);
@@ -78,7 +78,7 @@ export default function GroupSettings({ groupId, groupName = '', groupDescriptio
     setDeleting(true);
     try {
       await axios.delete(`${API}/groups/${groupId}`, {
-        withCredentials: true,
+        headers: authHeaders(),
       });
       toast.success('Group deleted successfully');
       setDeleteConfirmOpen(false);

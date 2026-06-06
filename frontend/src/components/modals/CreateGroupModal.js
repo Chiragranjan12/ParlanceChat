@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Check } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "@/contexts/AuthContext";
+import { API, authHeaders } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -28,7 +28,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
 
   const searchUsers = async (q) => {
     try {
-      const { data } = await axios.get(`${API}/users?q=${q}`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/users?q=${q}`, { headers: authHeaders() });
       setUsers(data.filter(u => u.id !== user?.id));
     } catch (e) {}
   };
@@ -56,7 +56,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }) {
         name: name.trim(),
         description: description.trim(),
         memberIds: memberIds
-      }, { withCredentials: true });
+      }, { headers: authHeaders() });
       toast.success(`Group "${name}" created!`);
       setName("");
       setDescription("");

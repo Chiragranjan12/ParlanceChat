@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useAuth, API } from "@/contexts/AuthContext";
+import { useAuth, API, authHeaders } from "@/contexts/AuthContext";
 
 const WS_BASE = process.env.REACT_APP_BACKEND_URL
   .replace("https://", "wss://")
@@ -180,21 +180,21 @@ export function ChatProvider({ children }) {
 
   const loadChannels = async () => {
     try {
-      const { data } = await axios.get(`${API}/channels/mine`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/channels/mine`, { headers: authHeaders() });
       if (isMounted.current) setChannels(data);
     } catch (e) {}
   };
 
   const loadGroups = async () => {
     try {
-      const { data } = await axios.get(`${API}/groups`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/groups`, { headers: authHeaders() });
       if (isMounted.current) setGroups(data);
     } catch (e) {}
   };
 
   const loadDMs = async () => {
     try {
-      const { data } = await axios.get(`${API}/dm/list`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/dm/list`, { headers: authHeaders() });
       if (isMounted.current) setDmList(data);
     } catch (e) {}
   };
@@ -210,7 +210,7 @@ export function ChatProvider({ children }) {
       if (room.type === "channel") url = `${API}/channels/${room.id}/messages`;
       else if (room.type === "group") url = `${API}/groups/${room.id}/messages`;
       else if (room.type === "dm") url = `${API}/dm/${room.otherId}/messages`;
-      const { data } = await axios.get(url, { withCredentials: true });
+      const { data } = await axios.get(url, { headers: authHeaders() });
       if (isMounted.current) {
         setMessages(prev => ({ ...prev, [room.id]: data }));
         subscribeRoom(room.id);
@@ -237,9 +237,9 @@ export function ChatProvider({ children }) {
     if (!activeRoom || !content.trim()) return;
     try {
       if (activeRoom.type === "dm") {
-        await axios.post(`${API}/dm`, { recipient_id: activeRoom.otherId, content: content.trim(), reply_to: replyTo }, { withCredentials: true });
+        await axios.post(`${API}/dm`, { recipient_id: activeRoom.otherId, content: content.trim(), reply_to: replyTo }, { headers: authHeaders() });
       } else {
-        await axios.post(`${API}/messages`, { content: content.trim(), room_type: activeRoom.type, room_id: activeRoom.id, reply_to: replyTo }, { withCredentials: true });
+        await axios.post(`${API}/messages`, { content: content.trim(), room_type: activeRoom.type, room_id: activeRoom.id, reply_to: replyTo }, { headers: authHeaders() });
       }
     } catch (e) {
       toast.error("Failed to send message");
@@ -248,7 +248,7 @@ export function ChatProvider({ children }) {
 
   const editMessage = async (messageId, content) => {
     try {
-      await axios.put(`${API}/messages/${messageId}`, { content }, { withCredentials: true });
+      await axios.put(`${API}/messages/${messageId}`, { content }, { headers: authHeaders() });
     } catch (e) {
       toast.error("Failed to edit message");
     }
@@ -256,7 +256,7 @@ export function ChatProvider({ children }) {
 
   const deleteMessage = async (messageId) => {
     try {
-      await axios.delete(`${API}/messages/${messageId}`, { withCredentials: true });
+      await axios.delete(`${API}/messages/${messageId}`, { headers: authHeaders() });
     } catch (e) {
       toast.error("Failed to delete message");
     }
@@ -264,7 +264,7 @@ export function ChatProvider({ children }) {
 
   const addReaction = async (messageId, emoji) => {
     try {
-      await axios.post(`${API}/messages/${messageId}/reactions`, { emoji }, { withCredentials: true });
+      await axios.post(`${API}/messages/${messageId}/reactions`, { emoji }, { headers: authHeaders() });
     } catch (e) {}
   };
 
@@ -276,7 +276,7 @@ export function ChatProvider({ children }) {
   // Group management methods
   const createGroup = async (name, description, memberIds) => {
     try {
-      const { data } = await axios.post(`${API}/groups`, { name, description, memberIds }, { withCredentials: true });
+      const { data } = await axios.post(`${API}/groups`, { name, description, memberIds }, { headers: authHeaders() });
       setGroups(prev => [...prev, data]);
       return data;
     } catch (e) {
@@ -287,7 +287,7 @@ export function ChatProvider({ children }) {
 
   const getGroupMembers = async (groupId) => {
     try {
-      const { data } = await axios.get(`${API}/groups/${groupId}/members`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/groups/${groupId}/members`, { headers: authHeaders() });
       return data;
     } catch (e) {
       toast.error("Failed to load group members");
@@ -297,7 +297,7 @@ export function ChatProvider({ children }) {
 
   const addMemberToGroup = async (groupId, userId) => {
     try {
-      await axios.post(`${API}/groups/${groupId}/members`, { userId }, { withCredentials: true });
+      await axios.post(`${API}/groups/${groupId}/members`, { userId }, { headers: authHeaders() });
       toast.success("Member added successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to add member");
@@ -307,7 +307,7 @@ export function ChatProvider({ children }) {
 
   const removeMemberFromGroup = async (groupId, memberId) => {
     try {
-      await axios.delete(`${API}/groups/${groupId}/members/${memberId}`, { withCredentials: true });
+      await axios.delete(`${API}/groups/${groupId}/members/${memberId}`, { headers: authHeaders() });
       toast.success("Member removed successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to remove member");
@@ -317,7 +317,7 @@ export function ChatProvider({ children }) {
 
   const leaveGroup = async (groupId) => {
     try {
-      await axios.post(`${API}/groups/${groupId}/leave`, {}, { withCredentials: true });
+      await axios.post(`${API}/groups/${groupId}/leave`, {}, { headers: authHeaders() });
       setGroups(prev => prev.filter(g => g.id !== groupId));
       setActiveRoomState(null);
       toast.success("Left group successfully");
@@ -334,7 +334,7 @@ export function ChatProvider({ children }) {
         room_type: "group",
         room_id: groupId,
         reply_to: replyTo
-      }, { withCredentials: true });
+      }, { headers: authHeaders() });
     } catch (e) {
       toast.error("Failed to send message");
       throw e;
@@ -343,21 +343,21 @@ export function ChatProvider({ children }) {
 
   const searchUsers = async (query) => {
     try {
-      const { data } = await axios.get(`${API}/users?q=${encodeURIComponent(query)}`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/users?q=${encodeURIComponent(query)}`, { headers: authHeaders() });
       return data.filter(u => u.id !== user?.id);
     } catch (e) { return []; }
   };
 
   const getAllUsers = async () => {
     try {
-      const { data } = await axios.get(`${API}/users`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/users`, { headers: authHeaders() });
       return data.filter(u => u.id !== user?.id);
     } catch (e) { return []; }
   };
 
   const getGroupMessages = async (groupId, limit = 50) => {
     try {
-      const { data } = await axios.get(`${API}/groups/${groupId}/messages?limit=${limit}`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/groups/${groupId}/messages?limit=${limit}`, { headers: authHeaders() });
       return data;
     } catch (e) {
       toast.error("Failed to load group messages");

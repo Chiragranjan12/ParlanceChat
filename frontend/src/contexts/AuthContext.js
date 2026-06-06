@@ -4,6 +4,11 @@ import axios from "axios";
 const API = process.env.REACT_APP_BACKEND_URL + "/api";
 const AuthContext = createContext(null);
 
+function authHeaders() {
+  const token = localStorage.getItem("parlance_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,20 +18,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const checkAuth = async () => {
+    const token = localStorage.getItem("parlance_token");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
     try {
-      const { data } = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/auth/me`, { headers: authHeaders() });
       setUser(data);
-      try {
-        const { data: refreshData } = await axios.post(`${API}/auth/refresh`, {}, { withCredentials: true });
-        if (refreshData.access_token) {
-          localStorage.setItem("parlance_token", refreshData.access_token);
-        }
-      } catch (e) {}
     } catch (e) {
-      setUser(null);
-      // Only clear token if it's not a network/CORS error - check status explicitly
       if (e.response?.status === 401) {
         localStorage.removeItem("parlance_token");
+        setUser(null);
       }
     } finally {
       setIsLoading(false);
@@ -34,27 +37,27 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const { data } = await axios.post(`${API}/auth/login`, { email, password }, { withCredentials: true });
-    setUser(data.user);
+    const { data } = await axios.post(`${API}/auth/login`, { email, password });
     const token = data.access_token || data.accessToken;
-    if (token) localStorage.setItem("parlance_token", token);
+    localStorage.setItem("parlance_token", token);
+    setUser(data.user);
     return data.user;
   };
 
   const register = async (email, username, password, displayName) => {
-    const { data } = await axios.post(`${API}/auth/register`, { email, username, password, display_name: displayName }, { withCredentials: true });
-    setUser(data.user);
+    const { data } = await axios.post(`${API}/auth/register`, { email, username, password, display_name: displayName });
     const token = data.access_token || data.accessToken;
-    if (token) localStorage.setItem("parlance_token", token);
+    localStorage.setItem("parlance_token", token);
+    setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+      await axios.post(`${API}/auth/logout`, {}, { headers: authHeaders() });
     } catch (e) {}
-    setUser(null);
     localStorage.removeItem("parlance_token");
+    setUser(null);
   };
 
   const updateUser = (updates) => {
@@ -69,4 +72,4 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
-export { API };
+export { API, authHeaders };

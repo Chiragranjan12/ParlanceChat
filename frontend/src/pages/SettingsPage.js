@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, User, Bell, Moon, Sun, Shield, LogOut, Trash2 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useAuth, API } from "@/contexts/AuthContext";
+import { useAuth, API, authHeaders } from "@/contexts/AuthContext";
 
 export default function SettingsPage() {
   const { user, logout, updateUser } = useAuth();
@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      const { data } = await axios.put(`${API}/users/me`, form, { withCredentials: true });
+      const { data } = await axios.put(`${API}/users/me`, form, { headers: authHeaders() });
       updateUser(data);
       toast.success("Profile updated!");
     } catch (e) {

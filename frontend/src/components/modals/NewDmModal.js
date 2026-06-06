@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, MessageSquare } from "lucide-react";
 import axios from "axios";
-import { API } from "@/contexts/AuthContext";
+import { API, authHeaders } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChat } from "@/contexts/ChatContext";
 import UserAvatar from "@/components/UserAvatar";
@@ -24,7 +24,7 @@ export default function NewDmModal({ open, onClose, onSelect }) {
 
   const fetchUsers = async (q) => {
     try {
-      const { data } = await axios.get(`${API}/users?q=${q}`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/users?q=${q}`, { headers: authHeaders() });
       setUsers(data.filter(u => u.id !== user?.id));
     } catch (e) {}
   };

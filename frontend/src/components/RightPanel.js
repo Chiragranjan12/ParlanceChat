@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Users, Crown, Circle } from "lucide-react";
 import axios from "axios";
 import { useChat } from "@/contexts/ChatContext";
-import { useAuth, API } from "@/contexts/AuthContext";
+import { useAuth, API, authHeaders } from "@/contexts/AuthContext";
 import UserAvatar from "@/components/UserAvatar";
 
 export default function RightPanel() {
@@ -27,7 +27,7 @@ export default function RightPanel() {
       const url = activeRoom.type === "channel"
         ? `${API}/channels/${activeRoom.id}/members`
         : `${API}/groups/${activeRoom.id}/members`;
-      const { data } = await axios.get(url, { withCredentials: true });
+      const { data } = await axios.get(url, { headers: authHeaders() });
       setMembers(data);
     } catch (e) {}
     finally { setIsLoading(false); }

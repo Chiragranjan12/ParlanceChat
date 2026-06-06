@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useAuth, API } from '@/contexts/AuthContext';
+import { useAuth, API, authHeaders } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
 import { Crown, Trash2, Plus, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export default function GroupMembers({ groupId, currentUserRole = 'member', onMe
       try {
         setLoading(true);
         const { data } = await axios.get(`${API}/groups/${groupId}/members`, {
-          withCredentials: true,
+          headers: authHeaders(),
         });
         setMembers(data || []);
       } catch (err) {
@@ -68,7 +68,7 @@ export default function GroupMembers({ groupId, currentUserRole = 'member', onMe
       const loadUsers = async () => {
         try {
           const { data } = await axios.get(`${API}/users/search?q=`, {
-            withCredentials: true,
+            headers: authHeaders(),
           });
           // Filter out current members
           const currentMemberIds = members.map(m => m.userId);
@@ -86,7 +86,7 @@ export default function GroupMembers({ groupId, currentUserRole = 'member', onMe
 
     try {
       await axios.delete(`${API}/groups/${groupId}/members/${removingMemberId}`, {
-        withCredentials: true,
+        headers: authHeaders(),
       });
       setMembers(m => m.filter(member => member.userId !== removingMemberId));
       toast.success('Member removed');
@@ -109,7 +109,7 @@ export default function GroupMembers({ groupId, currentUserRole = 'member', onMe
       await axios.post(
         `${API}/groups/${groupId}/members`,
         { userId: selectedUserId },
-        { withCredentials: true }
+        { headers: authHeaders() }
       );
       toast.success('Member added successfully');
       setSelectedUserId('');
@@ -117,7 +117,7 @@ export default function GroupMembers({ groupId, currentUserRole = 'member', onMe
       
       // Reload members
       const { data } = await axios.get(`${API}/groups/${groupId}/members`, {
-        withCredentials: true,
+        headers: authHeaders(),
       });
       setMembers(data || []);
       onMembersChange?.();

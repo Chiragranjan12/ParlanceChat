@@ -3,9 +3,7 @@ package com.parlance.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.time.Instant;
 
 @Entity
@@ -22,10 +20,18 @@ public class GroupMember {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @JsonIgnore
+    @Enumerated(EnumType.STRING)
     @Column(length = 20) @Builder.Default
-    private String role = "member";
+    private GroupRole role = GroupRole.MEMBER;
 
     @Column(name = "joined_at") @Builder.Default
     private Instant joinedAt = Instant.now();
+
+    @Column(name = "is_active") @Builder.Default
+    private Boolean isActive = true;
+
+    public enum GroupRole {
+        ADMIN,
+        MEMBER
+    }
 }

@@ -183,6 +183,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         return sessions != null && !sessions.isEmpty();
     }
 
+    public void unsubscribeUserFromRoom(String userId, String roomId) {
+        Set<String> users = roomUsers.get(roomId);
+        if (users == null) return;
+        users.remove(userId);
+        if (users.isEmpty()) {
+            roomUsers.remove(roomId);
+        }
+    }
+
     public List<String> getOnlineUsers() {
         return new ArrayList<>(connections.keySet());
     }

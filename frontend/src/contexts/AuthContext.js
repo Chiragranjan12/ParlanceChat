@@ -36,14 +36,16 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const { data } = await axios.post(`${API}/auth/login`, { email, password }, { withCredentials: true });
     setUser(data.user);
-    localStorage.setItem("parlance_token", data.accessToken);
+    const token = data.access_token || data.accessToken;
+    if (token) localStorage.setItem("parlance_token", token);
     return data.user;
   };
 
   const register = async (email, username, password, displayName) => {
-    const { data } = await axios.post(`${API}/auth/register`, { email, username, password, displayName }, { withCredentials: true });
+    const { data } = await axios.post(`${API}/auth/register`, { email, username, password, display_name: displayName }, { withCredentials: true });
     setUser(data.user);
-    localStorage.setItem("parlance_token", data.accessToken);
+    const token = data.access_token || data.accessToken;
+    if (token) localStorage.setItem("parlance_token", token);
     return data.user;
   };
 

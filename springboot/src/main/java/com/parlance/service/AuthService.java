@@ -113,11 +113,7 @@ public class AuthService {
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
-        Cookie cookie = new Cookie("access_token", newAccessToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(86400);
-        response.addCookie(cookie);
+        response.addHeader("Set-Cookie", "access_token=" + newAccessToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=86400");
         return newAccessToken;
     }
 
@@ -131,11 +127,14 @@ public class AuthService {
 
     private void setTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
         Cookie ac = new Cookie("access_token", accessToken);
-        ac.setHttpOnly(true); ac.setPath("/"); ac.setMaxAge(86400);
+        ac.setHttpOnly(true); ac.setPath("/"); ac.setMaxAge(86400); ac.setSecure(true);
         Cookie rc = new Cookie("refresh_token", refreshToken);
-        rc.setHttpOnly(true); rc.setPath("/"); rc.setMaxAge(604800);
+        rc.setHttpOnly(true); rc.setPath("/"); rc.setMaxAge(604800); rc.setSecure(true);
         response.addCookie(ac);
         response.addCookie(rc);
+        // SameSite=None required for cross-origin cookie delivery on deployed environments
+        response.addHeader("Set-Cookie", "access_token=" + accessToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=86400");
+        response.addHeader("Set-Cookie", "refresh_token=" + refreshToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=604800");
     }
 
     private void clearTokenCookies(HttpServletResponse response) {

@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +30,7 @@ public class MessageService {
     private final ChannelMemberRepository channelMemberRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final ChatWebSocketHandler wsHandler;
+    private static final Pattern MENTION_PATTERN = Pattern.compile("(?<!\\w)@([A-Za-z0-9_.-]{2,50})");
 
     public MessageDto enrich(Message msg) {
         MessageDto dto = new MessageDto();
@@ -40,6 +43,7 @@ public class MessageService {
         dto.setIsDeleted(msg.getIsDeleted());
         dto.setEditedAt(msg.getEditedAt());
         dto.setCreatedAt(msg.getCreatedAt());
+        dto.setMentionUserIds(msg.getMentionUserIds());
 
         // Sender
         userRepository.findById(msg.getSenderId()).ifPresent(u -> dto.setSender(UserDto.from(u)));
@@ -82,10 +86,8 @@ public class MessageService {
 
     @Transactional
     public MessageDto sendMessage(MessageRequestDto.SendMessage req, String senderId) {
-        // Validate membership
+        validateRoomAccess(req.getRoomType(), req.getRoomId(), senderId);
         if ("channel".equals(req.getRoomType())) {
-            if (!channelMemberRepository.existsByChannelIdAndUserId(req.getRoomId(), senderId))
-                throw new UserNotMemberException(senderId, req.getRoomId(), "channel");
             // Broadcast channels: admins-only post
             channelRepository.findById(req.getRoomId()).ifPresent(ch -> {
                 if ("broadcast".equalsIgnoreCase(ch.getChannelType())) {
@@ -98,16 +100,15 @@ public class MessageService {
                     }
                 }
             });
-        } else if ("group".equals(req.getRoomType())) {
-            if (!groupMemberRepository.existsByGroupIdAndUserId(req.getRoomId(), senderId))
-                throw new UserNotMemberException(senderId, req.getRoomId(), "group");
         }
+        List<String> mentionUserIds = extractMentionUserIds(req.getContent());
         Message msg = messageRepository.save(Message.builder()
                 .content(req.getContent()).senderId(senderId)
                 .roomType(req.getRoomType()).roomId(req.getRoomId())
-                .replyTo(req.getReplyTo()).build());
+                .replyTo(req.getReplyTo()).mentionUserIds(mentionUserIds).build());
         MessageDto dto = enrich(msg);
         wsHandler.broadcastToRoom(req.getRoomId(), Map.of("type", "message", "data", dto));
+        notifyMentionedUsers(dto, senderId);
         return dto;
     }
 
@@ -120,14 +121,16 @@ public class MessageService {
         userRepository.findById(req.getRecipientId()).orElseThrow(() -> new UserNotFoundException(req.getRecipientId()));
 
         String roomId = generateDMRoomId(senderId, req.getRecipientId());
+        List<String> mentionUserIds = extractMentionUserIds(req.getContent());
         Message msg = messageRepository.save(Message.builder()
                 .content(req.getContent()).senderId(senderId)
                 .roomType("dm").roomId(roomId)
-                .replyTo(req.getReplyTo()).build());
+                .replyTo(req.getReplyTo()).mentionUserIds(mentionUserIds).build());
         MessageDto dto = enrich(msg);
         Map<String, Object> payload = Map.of("type", "message", "data", dto);
         wsHandler.sendToUser(senderId, payload);
         wsHandler.sendToUser(req.getRecipientId(), payload);
+        notifyMentionedUsers(dto, senderId);
         return dto;
     }
 
@@ -138,11 +141,32 @@ public class MessageService {
         if (!msg.getSenderId().equals(userId))
             throw new UnauthorizedException("Cannot edit others' messages");
         msg.setContent(content);
+        msg.setMentionUserIds(extractMentionUserIds(content));
         msg.setEditedAt(Instant.now());
         messageRepository.save(msg);
         MessageDto dto = enrich(msg);
         wsHandler.broadcastToRoom(msg.getRoomId(), Map.of("type", "message_edited", "data", dto));
+        notifyMentionedUsers(dto, userId);
         return dto;
+    }
+
+    public List<MessageDto> searchMessages(String roomType, String roomId, String query, String sender,
+                                           Instant fromDate, Instant toDate, int limit, String userId) {
+        validateRoomAccess(roomType, roomId, userId);
+        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        String normalizedSender = sender == null || sender.isBlank() ? null : sender.trim();
+        int cappedLimit = Math.max(1, Math.min(limit, 100));
+        return messageRepository.searchRoomMessages(
+                        roomType,
+                        roomId,
+                        normalizedQuery,
+                        normalizedSender,
+                        fromDate,
+                        toDate,
+                        PageRequest.of(0, cappedLimit))
+                .stream()
+                .map(this::enrich)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -237,5 +261,47 @@ public class MessageService {
 
     public List<Map<String, Object>> getDmList(String userId, ChatWebSocketHandler wsHandler) {
         return getUserDMConversations(userId);
+    }
+
+    private void validateRoomAccess(String roomType, String roomId, String userId) {
+        if ("channel".equals(roomType)) {
+            if (!channelMemberRepository.existsByChannelIdAndUserId(roomId, userId))
+                throw new UserNotMemberException(userId, roomId, "channel");
+        } else if ("group".equals(roomType)) {
+            if (!groupMemberRepository.existsByGroupIdAndUserId(roomId, userId))
+                throw new UserNotMemberException(userId, roomId, "group");
+        } else if ("dm".equals(roomType)) {
+            String[] parts = roomId.split("_", 3);
+            if (parts.length != 3 || (!parts[1].equals(userId) && !parts[2].equals(userId))) {
+                throw new UnauthorizedException("Cannot access this DM");
+            }
+        } else {
+            throw new UnauthorizedException("Unsupported room type");
+        }
+    }
+
+    private List<String> extractMentionUserIds(String content) {
+        if (content == null || content.isBlank()) return List.of();
+        Matcher matcher = MENTION_PATTERN.matcher(content);
+        Set<String> usernames = new LinkedHashSet<>();
+        while (matcher.find()) {
+            usernames.add(matcher.group(1));
+        }
+        if (usernames.isEmpty()) return List.of();
+        return usernames.stream()
+                .map(userRepository::findByUsername)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(User::getId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private void notifyMentionedUsers(MessageDto message, String senderId) {
+        if (message.getMentionUserIds() == null || message.getMentionUserIds().isEmpty()) return;
+        Map<String, Object> payload = Map.of("type", "mention", "data", message);
+        message.getMentionUserIds().stream()
+                .filter(id -> !id.equals(senderId))
+                .forEach(id -> wsHandler.sendToUser(id, payload));
     }
 }

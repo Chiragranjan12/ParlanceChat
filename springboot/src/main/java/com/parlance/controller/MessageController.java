@@ -7,9 +7,11 @@ import com.parlance.service.MessageService;
 import com.parlance.websocket.ChatWebSocketHandler;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +48,18 @@ public class MessageController {
                                               @Valid @RequestBody MessageRequestDto.AddReaction req,
                                               @AuthenticationPrincipal User user) {
         return messageService.toggleReaction(messageId, req.getEmoji(), user.getId());
+    }
+
+    @GetMapping("/messages/search")
+    public List<MessageDto> searchMessages(@RequestParam(name = "room_type") String roomType,
+                                           @RequestParam(name = "room_id") String roomId,
+                                           @RequestParam(name = "q", required = false) String query,
+                                           @RequestParam(required = false) String sender,
+                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+                                           @RequestParam(defaultValue = "50") int limit,
+                                           @AuthenticationPrincipal User user) {
+        return messageService.searchMessages(roomType, roomId, query, sender, from, to, limit, user.getId());
     }
 
     @GetMapping("/presence")

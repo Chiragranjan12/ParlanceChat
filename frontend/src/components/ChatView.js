@@ -8,12 +8,14 @@ import MessageInput from "@/components/MessageInput";
 import TypingIndicator from "@/components/TypingIndicator";
 
 export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
-  const { activeRoom, messages, typingUsers, isLoadingMessages } = useChat();
+  const { activeRoom, messages, typingUsers, isLoadingMessages, searchMessages } = useChat();
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const [replyTo, setReplyTo] = useState(null);
   const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const roomMessages = messages[activeRoom?.id] || [];
   const typing = typingUsers[activeRoom?.id] || {};
@@ -27,10 +29,28 @@ export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
   // Group messages by sender + time (within 5 minutes = grouped)
   const groupedMessages = groupMessages(roomMessages);
 
-  // Filter by search
-  const displayMessages = searchQuery
-    ? groupedMessages.filter(g => g.messages.some(m => m.content.toLowerCase().includes(searchQuery.toLowerCase())))
-    : groupedMessages;
+  useEffect(() => {
+    if (!searchMode || !activeRoom || !searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      const results = await searchMessages({ query: searchQuery, limit: 30 });
+      if (!cancelled) {
+        setSearchResults(results);
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchMode, searchQuery, activeRoom?.id, searchMessages]);
 
   const getRoomIcon = () => {
     if (!activeRoom) return null;
@@ -98,6 +118,36 @@ export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
                 </button>
               )}
             </div>
+            {searchQuery.trim() && (
+              <div className="mt-2 rounded-lg border border-[#27272a] bg-[#18181b] overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-[#27272a]">
+                  <span className="text-xs font-medium text-[#a1a1aa]">
+                    {isSearching ? "Searching..." : `${searchResults.length} result${searchResults.length === 1 ? "" : "s"}`}
+                  </span>
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  {!isSearching && searchResults.length === 0 ? (
+                    <p className="px-3 py-3 text-sm text-[#71717a]">No messages found</p>
+                  ) : (
+                    searchResults.map(result => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 hover:bg-[#27272a] transition-colors border-b border-[#27272a]/60 last:border-b-0"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-white">{result.sender?.display_name || result.sender?.username || "Unknown"}</span>
+                          <span className="text-[11px] text-[#52525b]">{new Date(result.created_at).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm text-[#d4d4d8] line-clamp-2">
+                          <HighlightedText text={result.content} query={searchQuery} />
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -109,13 +159,14 @@ export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
         ) : roomMessages.length === 0 ? (
           <EmptyMessages room={activeRoom} />
         ) : (
-          displayMessages.map((group, i) => (
+          groupedMessages.map((group, i) => (
             <MessageGroup
               key={group.messages[0].id}
               group={group}
               index={i}
               onReply={(msg) => setReplyTo(msg)}
               currentUserId={user?.id}
+              searchQuery={searchQuery}
             />
           ))
         )}
@@ -137,7 +188,7 @@ export default function ChatView({ onToggleRightPanel, rightPanelOpen }) {
   );
 }
 
-function MessageGroup({ group, index, onReply, currentUserId }) {
+function MessageGroup({ group, index, onReply, currentUserId, searchQuery }) {
   return (
     <div className="space-y-0.5">
       {group.messages.map((msg, i) => (
@@ -149,9 +200,21 @@ function MessageGroup({ group, index, onReply, currentUserId }) {
           onReply={() => onReply(msg)}
           isOwn={msg.sender_id === currentUserId}
           index={index * 10 + i}
+          searchQuery={searchQuery}
         />
       ))}
     </div>
+  );
+}
+
+function HighlightedText({ text = "", query = "" }) {
+  if (!query.trim()) return text;
+  const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "ig"));
+  return parts.map((part, index) =>
+    part.toLowerCase() === query.trim().toLowerCase()
+      ? <mark key={index} className="bg-[#facc15]/20 text-[#fde68a] rounded px-0.5">{part}</mark>
+      : <span key={index}>{part}</span>
   );
 }
 

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "messages")
@@ -32,6 +34,12 @@ public class Message {
 
     @Column(name = "edited_at")
     private Instant editedAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "message_mentions", joinColumns = @JoinColumn(name = "message_id"))
+    @Column(name = "user_id", length = 36)
+    @Builder.Default
+    private List<String> mentionUserIds = new ArrayList<>();
 
     @Column(name = "created_at") @Builder.Default
     private Instant createdAt = null;

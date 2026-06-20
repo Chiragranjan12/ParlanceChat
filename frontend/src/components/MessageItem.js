@@ -7,7 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import EmojiPicker from "@/components/EmojiPicker";
 import { formatTime, formatRelativeDate } from "@/utils/dateUtils";
 
-export default function MessageItem({ message, isGrouped, showHeader, onReply, isOwn, index }) {
+export default function MessageItem({ message, isGrouped, showHeader, onReply, isOwn, index, searchQuery = "" }) {
   const { addReaction, editMessage, deleteMessage } = useChat();
   const { user } = useAuth();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -105,7 +105,9 @@ export default function MessageItem({ message, isGrouped, showHeader, onReply, i
             </div>
           </div>
         ) : (
-          <p className="text-[15px] text-[#e4e4e7] leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+          <p className="text-[15px] text-[#e4e4e7] leading-relaxed whitespace-pre-wrap break-words">
+            <MessageContent text={message.content} searchQuery={searchQuery} />
+          </p>
         )}
 
         {/* Reactions */}
@@ -155,5 +157,39 @@ export default function MessageItem({ message, isGrouped, showHeader, onReply, i
         </div>
       )}
     </motion.div>
+  );
+}
+
+function MessageContent({ text = "", searchQuery = "" }) {
+  const mentionPattern = /(@[A-Za-z0-9_.-]{2,50})/g;
+  const pieces = text.split(mentionPattern);
+  return pieces.map((piece, index) => {
+    const isMention = mentionPattern.test(piece);
+    mentionPattern.lastIndex = 0;
+    return (
+      <HighlightedPiece
+        key={index}
+        text={piece}
+        searchQuery={searchQuery}
+        className={isMention ? "font-medium text-[#93c5fd] bg-[#2563eb]/15 rounded px-1" : ""}
+      />
+    );
+  });
+}
+
+function HighlightedPiece({ text = "", searchQuery = "", className = "" }) {
+  if (!searchQuery.trim()) {
+    return className ? <span className={className}>{text}</span> : <span>{text}</span>;
+  }
+  const escaped = searchQuery.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "ig"));
+  return (
+    <span className={className}>
+      {parts.map((part, index) =>
+        part.toLowerCase() === searchQuery.trim().toLowerCase()
+          ? <mark key={index} className="bg-[#facc15]/20 text-[#fde68a] rounded px-0.5">{part}</mark>
+          : <span key={index}>{part}</span>
+      )}
+    </span>
   );
 }

@@ -1,3 +1,4 @@
+C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\service\UserService.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\DmController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\model\GroupMember.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\dto\response\MessageResponse.java
@@ -17,9 +18,11 @@ C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\model\User.jav
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\UserController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\model\LoginAttempt.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\model\Message.java
+C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\config\CorsConfig.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\exception\DuplicateUserException.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\dto\MessageDto.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\exception\UserNotMemberException.java
+C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\exception\DuplicateMemberException.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\controller\GroupController.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\repository\UserRepository.java
 C:\Users\mishr\ParlanceChat\springboot\src\main\java\com\parlance\service\AuthService.java

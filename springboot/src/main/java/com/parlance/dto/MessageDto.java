@@ -3,6 +3,7 @@ package com.parlance.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -18,6 +19,7 @@ public class MessageDto {
     private Instant editedAt;
     private Instant createdAt;
     private UserDto sender;
+    private List<String> mentionUserIds;
     private Map<String, ReactionInfo> reactions;
     private ReplyPreview replyPreview;
 

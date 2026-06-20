@@ -3,12 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Smile, Reply } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import EmojiPicker from "@/components/EmojiPicker";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function MessageInput({ replyTo, onCancelReply, roomName }) {
-  const { sendMessage, sendTyping, activeRoom } = useChat();
+  const { sendMessage, sendTyping, activeRoom, searchUsers } = useChat();
   const [content, setContent] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState(null);
+  const [mentionOptions, setMentionOptions] = useState([]);
+  const [activeMentionIndex, setActiveMentionIndex] = useState(0);
   const textareaRef = useRef(null);
   const typingTimerRef = useRef(null);
   const isTypingRef = useRef(false);
@@ -36,6 +40,7 @@ export default function MessageInput({ replyTo, onCancelReply, roomName }) {
 
   const handleChange = (e) => {
     setContent(e.target.value);
+    updateMentionQuery(e.target.value, e.target.selectionStart);
     handleTyping();
     // Auto-resize
     const ta = e.target;
@@ -62,10 +67,84 @@ export default function MessageInput({ replyTo, onCancelReply, roomName }) {
   };
 
   const handleKeyDown = (e) => {
+    if (mentionOptions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveMentionIndex(prev => (prev + 1) % mentionOptions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveMentionIndex(prev => (prev - 1 + mentionOptions.length) % mentionOptions.length);
+        return;
+      }
+      if (e.key === "Tab" || e.key === "Enter") {
+        e.preventDefault();
+        insertMention(mentionOptions[activeMentionIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        setMentionQuery(null);
+        setMentionOptions([]);
+        return;
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
+  };
+
+  useEffect(() => {
+    if (mentionQuery === null) {
+      setMentionOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const users = await searchUsers(mentionQuery);
+      if (!cancelled) {
+        setMentionOptions(users.slice(0, 6));
+        setActiveMentionIndex(0);
+      }
+    }, 150);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [mentionQuery, searchUsers]);
+
+  const updateMentionQuery = (value, cursor) => {
+    const beforeCursor = value.slice(0, cursor);
+    const match = beforeCursor.match(/(?:^|\s)@([A-Za-z0-9_.-]*)$/);
+    setMentionQuery(match ? match[1] : null);
+  };
+
+  const insertMention = (selectedUser) => {
+    if (!selectedUser || !textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const cursor = textarea.selectionStart;
+    const beforeCursor = content.slice(0, cursor);
+    const afterCursor = content.slice(cursor);
+    const match = beforeCursor.match(/(?:^|\s)@([A-Za-z0-9_.-]*)$/);
+    if (!match) return;
+    const mentionStart = beforeCursor.length - match[1].length - 1;
+    const prefix = content.slice(0, mentionStart);
+    const needsSpaceBefore = prefix.length > 0 && !/\s$/.test(prefix);
+    const mentionText = `${needsSpaceBefore ? " " : ""}@${selectedUser.username} `;
+    const nextContent = `${prefix}${mentionText}${afterCursor}`;
+    const nextCursor = `${prefix}${mentionText}`.length;
+    setContent(nextContent);
+    setMentionQuery(null);
+    setMentionOptions([]);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
+    });
   };
 
   const handleEmojiSelect = (emoji) => {
@@ -104,6 +183,24 @@ export default function MessageInput({ replyTo, onCancelReply, roomName }) {
       </AnimatePresence>
 
       {/* Input area */}
+      {mentionOptions.length > 0 && (
+        <div className="absolute bottom-full left-0 mb-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-[#27272a] bg-[#18181b] shadow-xl overflow-hidden z-30">
+          {mentionOptions.map((option, index) => (
+            <button
+              key={option.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); insertMention(option); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${index === activeMentionIndex ? "bg-[#6366f1]/15" : "hover:bg-[#27272a]"}`}
+            >
+              <UserAvatar user={option} size="xs" />
+              <span className="min-w-0">
+                <span className="block text-sm text-white truncate">{option.display_name || option.username}</span>
+                <span className="block text-xs text-[#71717a] truncate">@{option.username}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className={`flex items-end gap-2 bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2.5 focus-within:border-[#6366f1]/50 transition-colors ${replyTo ? "rounded-t-none border-t-0" : ""}`}>
         <textarea
           ref={textareaRef}

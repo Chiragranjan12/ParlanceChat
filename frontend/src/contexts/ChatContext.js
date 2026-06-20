@@ -268,6 +268,26 @@ export function ChatProvider({ children }) {
     } catch (e) {}
   };
 
+  const searchMessages = useCallback(async ({ room = activeRoom, query = "", sender = "", from = "", to = "", limit = 50 } = {}) => {
+    if (!room) return [];
+    try {
+      const params = new URLSearchParams({
+        room_type: room.type,
+        room_id: room.id,
+        limit: String(limit)
+      });
+      if (query.trim()) params.set("q", query.trim());
+      if (sender.trim()) params.set("sender", sender.trim());
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      const { data } = await axios.get(`${API}/messages/search?${params.toString()}`, { headers: authHeaders() });
+      return data;
+    } catch (e) {
+      toast.error("Failed to search messages");
+      return [];
+    }
+  }, [activeRoom]);
+
   const sendTyping = useCallback((isTyping) => {
     if (!activeRoom || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
     wsRef.current.send(JSON.stringify({ type: isTyping ? "typing_start" : "typing_stop", room_id: activeRoom.id }));
@@ -341,12 +361,12 @@ export function ChatProvider({ children }) {
     }
   };
 
-  const searchUsers = async (query) => {
+  const searchUsers = useCallback(async (query) => {
     try {
       const { data } = await axios.get(`${API}/users?q=${encodeURIComponent(query)}`, { headers: authHeaders() });
       return data.filter(u => u.id !== user?.id);
     } catch (e) { return []; }
-  };
+  }, [user?.id]);
 
   const getAllUsers = async () => {
     try {
@@ -375,7 +395,7 @@ export function ChatProvider({ children }) {
       loadChannels, loadGroups, loadDMs, loadMessages,
       createGroup, getGroupMembers, addMemberToGroup, removeMemberFromGroup,
       leaveGroup, sendGroupMessage, getGroupMessages,
-      searchUsers, getAllUsers
+      searchUsers, searchMessages, getAllUsers
     }}>
       {children}
     </ChatContext.Provider>
